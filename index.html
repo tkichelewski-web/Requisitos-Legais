@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Requisitos Legais — IP VIDAS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde:#07583C; --verde-2:#0A6B4A; --lima:#B3DD64; --lima-suave:#EAF5D6; --ambar:#FDB952; --vermelho:#DF4636;
+  --fundo:#F2F5F0; --papel:#FFFFFF; --tinta:#1C2B22; --muted:#5D6F64; --linha:#D5E3CC;
+  --erro:#B42318; --erro-bg:#FCE8E6; --aviso:#9A6B00; --aviso-bg:#FFF4DB; --cinza-bg:#EEF1EE;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Barlow',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;background:var(--fundo);color:var(--tinta);font-size:15px;line-height:1.5}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lima);outline-offset:2px}
+.hidden{display:none !important}
+
+header.topo{background:var(--verde);color:#fff;border-bottom:4px solid var(--lima)}
+.topo-inner{max-width:1240px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+.topo h1{margin:0;font-size:22px;line-height:1.2}
+.topo .sub{color:var(--lima);font-size:14px;font-weight:500}
+.topo .filtros{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.topo label{display:block;font-size:12px;color:#CFE6D6;margin-bottom:2px}
+.topo select{background:#0B6546;border:1px solid #2F7F60;color:#fff;border-radius:6px;padding:7px 10px;min-width:150px}
+.usuario-topo{font-size:13px;color:#CFE6D6;align-self:center}
+.usuario-topo b{color:#fff}
+.usuario-topo button{background:none;border:1px solid #2F7F60;color:#fff;border-radius:6px;padding:2px 10px;margin-left:8px;cursor:pointer;font-size:12px}
+
+main{max-width:1240px;margin:0 auto;padding:20px 24px 60px}
+.abas{display:flex;gap:4px;border-bottom:1px solid var(--linha);margin-bottom:18px}
+.aba{padding:8px 14px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.aba.ativa{color:var(--verde);border-bottom-color:var(--verde)}
+
+.cartao{background:var(--papel);border:1px solid var(--linha);border-radius:8px;padding:18px 20px;margin-bottom:16px}
+.cartao h2{margin:0 0 4px;font-size:18px;color:var(--verde)}
+.cartao .desc{margin:0 0 14px;color:var(--muted);font-size:14px}
+.soltar{border:2px dashed var(--linha);border-radius:8px;padding:26px;text-align:center;color:var(--muted);cursor:pointer;background:var(--fundo)}
+.soltar:hover,.soltar.sobre{border-color:var(--verde);color:var(--verde)}
+.soltar b{color:var(--verde)}
+
+.linha-acoes{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:14px 0}
+.linha-acoes label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.linha-acoes select{padding:8px 10px;border:1px solid var(--linha);border-radius:6px;background:#fff;min-width:180px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;font-weight:600;background:none}
+.btn-primario{background:var(--verde);color:#fff}
+.btn-primario:hover{background:var(--verde-2)}
+.btn-primario:disabled{background:#8FA99A;cursor:not-allowed}
+.btn-sec{background:#fff;color:var(--verde);border-color:var(--linha)}
+.btn-sec:hover{border-color:var(--verde)}
+.btn-link{color:var(--verde);padding:4px 6px;font-size:13px}
+.btn-link:hover{text-decoration:underline}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 14px}
+.kpi{background:var(--fundo);border-radius:6px;padding:10px 12px}
+.kpi .n{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1}
+.kpi .t{font-size:12px;color:var(--muted)}
+.kpi.ok .n{color:var(--verde)} .kpi.nok .n{color:var(--vermelho)} .kpi.at .n{color:var(--aviso)}
+
+.aviso-box{background:var(--aviso-bg);border:1px solid var(--ambar);color:var(--aviso);border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.aviso-box ul{margin:4px 0 0;padding-left:18px}
+
+.tabela{overflow-x:auto;border:1px solid var(--linha);border-radius:6px;background:#fff}
+.tabela table{border-collapse:collapse;width:100%;font-size:13px}
+.tabela th,.tabela td{padding:7px 9px;border-bottom:1px solid var(--cinza-bg);text-align:center;white-space:nowrap}
+.tabela th:first-child,.tabela td:first-child{text-align:left;white-space:normal;min-width:220px}
+.tabela thead th{background:var(--lima-suave);color:var(--verde);font-weight:700}
+.tabela td.ok{color:var(--verde);font-weight:700}
+.tabela td.nok{color:var(--vermelho);font-weight:700}
+.tabela tr.clicavel{cursor:pointer}
+.tabela tr.clicavel:hover td{background:var(--fundo)}
+.tabela .sub{font-size:11px;color:var(--muted)}
+
+.vazio{background:var(--papel);border:1px dashed var(--linha);border-radius:6px;padding:28px;text-align:center;color:var(--muted)}
+.carregando{color:var(--muted);padding:18px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:6px;z-index:80;font-size:14px}
+.toast.erro{background:var(--erro)}
+
+.fundo-modal{position:fixed;inset:0;background:rgba(12,30,20,.55);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal{background:#fff;border-radius:10px;max-width:1000px;width:100%;padding:22px 24px}
+.modal h3{margin:0 0 4px;color:var(--verde)}
+.modal .desc{margin:0 0 14px;color:var(--muted);font-size:14px}
+.status{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px}
+.st-nat{background:var(--erro-bg);color:var(--erro)} .st-nav{background:var(--aviso-bg);color:var(--aviso)} .st-ana{background:var(--cinza-bg);color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-inner">
+    <div>
+      <h1>Requisitos Legais</h1>
+      <div class="sub">Importação do Ius Natura para os indicadores do IP</div>
+    </div>
+    <div class="filtros">
+      <div><label for="f-safra">Safra</label><select id="f-safra"></select></div>
+      <div class="usuario-topo" id="usuario-topo" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="abas" role="tablist">
+    <button class="aba ativa" data-aba="imp" role="tab">Importar planilha</button>
+    <button class="aba" data-aba="hist" role="tab">Meses importados</button>
+  </div>
+
+  <section id="aba-imp">
+    <div class="cartao">
+      <h2>1. Planilha "Requisito de CAL" do Ius Natura</h2>
+      <p class="desc">Exporte a base completa (todos os status). A planilha é uma foto do momento: os requisitos pendentes continuam contando até serem resolvidos.</p>
+      <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" hidden>
+      <div class="soltar" id="soltar" tabindex="0" role="button"><b>Clique para escolher a planilha</b> ou arraste o arquivo aqui</div>
+      <div id="previa"></div>
+    </div>
+  </section>
+
+  <section id="aba-hist" class="hidden">
+    <div id="hist"><div class="carregando">Carregando...</div></div>
+  </section>
+</main>
+
+<div id="modal-raiz"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// Conexão (mesmo projeto e sessão do portal)
+// ─────────────────────────────────────────────────────────────
+const SB_URL = 'https://umpctnchhmyvpjwxllaj.supabase.co';
+const SB_KEY = 'sb_publishable_lxiF04jATB1HMLINX-FvOg_3JOjXxrQ';
+const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, storageKey: 'sistema-ip-auth' } });
+const PORTAL_URL = 'https://tkichelewski-web.github.io/portal-ip/';
+// Quem pode importar (grava os números que vão para o IP)
+const ADMIN_EMAILS = ['tkichelewski@usinasantaadelia.com.br'];
+
+const IND_ATENDIDOS = 'Nº de Requisitos Legais atendidos';
+const IND_NAO_AVALIADOS = 'Nº de Requisitos Legais não avaliados';
+
+// ─────────────────────────────────────────────────────────────
+// Área responsável (Ius Natura) → gerência do IP.
+// A unidade vem da coluna CAL (Jaboticabal = JB, Pereira Barreto = PB).
+// Chave: nome da área sem o sufixo "- JB"/"- PB"/"- Corporativo".
+// ─────────────────────────────────────────────────────────────
+const G_SSMA = 'SSMA', G_IND = 'Industrial', G_EQ = 'Engenharia e Qualidade', G_CTT = 'Agrícola CTT e PPT',
+      G_EA = 'Engenharia Agronômica', G_AUTO = 'Automotiva', G_PCT = 'Planejamento, Controle e Tecnologia',
+      G_RH = 'RH/Jurídico/Restaurante/Saúde/Facilities', G_SUP = 'Suprimentos';
+const AREA_GERENCIA = {
+  'Segurança do Trabalho': G_SSMA, 'Meio Ambiente': G_SSMA, 'Saúde Ocupacional': G_SSMA, 'Gerência SSMA': G_SSMA,
+  'PCM': G_IND, 'Manutenção Elétrica': G_IND, 'Processos Industriais': G_IND, 'Instrumentação': G_IND, 'Gerência Industrial': G_IND,
+  'Engenharia e Projetos': G_EQ, 'Laboratório': G_EQ, 'Qualidade': G_EQ, 'Gerência Engenharia e Qualidade': G_EQ,
+  'CTT': G_CTT, 'PPT': G_CTT, 'Tratos Culturais': G_CTT, 'Transporte Aéreo': G_CTT,
+  'Gerência Agrícola CTT e PPT': G_CTT, 'Gerência Agrícola - CTT e PPT': G_CTT,
+  'Drone': G_EA, 'Geotecnologia': G_EA, 'Gerência Engenharia Agronômica': G_EA, 'Engenharia Agrícola e Agronômica': G_EA,
+  'Manutenção Automotiva': G_AUTO, 'Engenharia Automotiva': G_AUTO, 'Gerência Automotiva': G_AUTO,
+  'Gerência Planejamento e Controle Agrícola': G_PCT, 'Planejamento Agrícola': G_PCT,
+  'Gerência RH/Jurídico': G_RH, 'Gerência RH': G_RH, 'Diretoria Pessoas': G_RH, 'Administração de Pessoal': G_RH,
+  'Restaurante': G_RH, 'Facilities': G_RH, 'Supervisão Facilities': G_RH, 'Patrimonial': G_RH,
+  'Treinamento e Desenvolvimento': G_RH, 'Comunicação e Responsabilidade Social': G_RH,
+  'Suprimentos': G_SUP, 'Gerência Suprimentos': G_SUP, 'Almoxarifado': G_SUP, 'Posto de Combustível': G_SUP
+};
+// "Transporte" depende da unidade: JB → PPT (Agrícola CTT e PPT); PB → Engenharia Agronômica
+const AREA_POR_UNIDADE = { 'Transporte': { JB: G_CTT, PB: G_EA } };
+
+const MESES_SAFRA = [['04','Abr'],['05','Mai'],['06','Jun'],['07','Jul'],['08','Ago'],['09','Set'],['10','Out'],['11','Nov'],['12','Dez'],['01','Jan'],['02','Fev'],['03','Mar']];
+const NOMES_MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+let safras = [], gerencias = [], indAt = null, indNav = null, usuarioAtual = null;
+let analise = null; // resultado da planilha carregada
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const chaveGer = s => norm(s).replace(/^GERENCIA\s+/, '').replace(/\s*-\s*(JB|PB)$/, '').replace(/[^A-Z0-9]/g, '');
+const safraAtual = () => safras.find(s => s.id === Number($('f-safra').value));
+const hojeMes = () => new Date().toISOString().slice(0, 7);
+const nomeMesLongo = ym => NOMES_MES[Number(ym.slice(5, 7)) - 1] + ' de ' + ym.slice(0, 4);
+const fmtDataHora = d => d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+const pct = (r, p) => p ? Math.round(r / p * 1000) / 10 : 100;
+function mesesDaSafra(s) {
+  if (!s) return [];
+  return MESES_SAFRA.map(([n, abr]) => ({ ym: (Number(n) >= 4 ? s.ano_ini : s.ano_fim) + '-' + n, abr }));
+}
+function toast(msg, erro) {
+  const t = document.createElement('div'); t.className = 'toast' + (erro ? ' erro' : ''); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), erro ? 6000 : 2600);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Login (pelo portal) e acesso restrito
+// ─────────────────────────────────────────────────────────────
+async function exigirLogin() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace(PORTAL_URL + '?voltar=' + encodeURIComponent(location.href.split('#')[0])); return false; }
+  const u = session.user;
+  const { data } = await sb.from('usuarios').select('nome').eq('auth_id', u.id).maybeSingle();
+  usuarioAtual = { nome: (data && data.nome) || u.email, email: (u.email || '').toLowerCase() };
+  const box = $('usuario-topo');
+  box.innerHTML = 'Conectado como <b></b><button type="button">Sair</button>';
+  box.querySelector('b').textContent = usuarioAtual.nome;
+  box.querySelector('button').onclick = async () => { await sb.auth.signOut(); location.href = PORTAL_URL; };
+  box.hidden = false;
+  if (!ADMIN_EMAILS.includes(usuarioAtual.email)) {
+    document.querySelector('main').innerHTML = '<div class="vazio">Esta tela tem acesso restrito. <a href="' + PORTAL_URL + '">Voltar ao portal</a></div>';
+    return false;
+  }
+  return true;
+}
+
+async function init() {
+  if (!(await exigirLogin())) return;
+  const [rs, rg, ri] = await Promise.all([
+    sb.from('safras').select('id,nome,ano_ini,ano_fim').eq('ativa', true).order('ano_ini', { ascending: false }),
+    sb.from('gerencias').select('id,nome,unidade_id,unidades(nome)').eq('ativo', true),
+    sb.from('indicadores').select('id,nome').eq('ativo', true)
+  ]);
+  const err = rs.error || rg.error || ri.error;
+  if (err) { $('previa').innerHTML = `<div class="aviso-box">Não consegui ler o Supabase: ${esc(err.message)}</div>`; return; }
+  safras = rs.data || []; gerencias = rg.data || [];
+  indAt = (ri.data || []).find(i => norm(i.nome) === norm(IND_ATENDIDOS)) || null;
+  indNav = (ri.data || []).find(i => norm(i.nome) === norm(IND_NAO_AVALIADOS)) || null;
+  $('f-safra').innerHTML = safras.map(s => `<option value="${s.id}">${esc(s.nome)}</option>`).join('');
+  $('f-safra').onchange = () => { if (analise) renderPrevia(); renderHist(); };
+
+  const ent = $('arquivo'), zona = $('soltar');
+  zona.onclick = () => ent.click();
+  zona.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ent.click(); } };
+  ent.onchange = e => { if (e.target.files[0]) lerArquivo(e.target.files[0]); e.target.value = ''; };
+  zona.ondragover = e => { e.preventDefault(); zona.classList.add('sobre'); };
+  zona.ondragleave = () => zona.classList.remove('sobre');
+  zona.ondrop = e => { e.preventDefault(); zona.classList.remove('sobre'); if (e.dataTransfer.files[0]) lerArquivo(e.dataTransfer.files[0]); };
+
+  document.querySelectorAll('.aba').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.aba').forEach(x => x.classList.toggle('ativa', x === b));
+    $('aba-imp').classList.toggle('hidden', b.dataset.aba !== 'imp');
+    $('aba-hist').classList.toggle('hidden', b.dataset.aba !== 'hist');
+    if (b.dataset.aba === 'hist') renderHist();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Leitura e análise da planilha
+// ─────────────────────────────────────────────────────────────
+function unidadeDoCAL(cal) {
+  const n = norm(cal);
+  if (n.includes('JABOTICABAL')) return 'JB';
+  if (n.includes('PEREIRA')) return 'PB';
+  return null;
+}
+function baseArea(area) {
+  return String(area || '').trim().replace(/\s*-\s*(JB|PB|Corporativo)\s*$/i, '').trim();
+}
+function gerenciaAlvo(area, un) {
+  const base = baseArea(area);
+  const porUn = Object.keys(AREA_POR_UNIDADE).find(k => norm(k) === norm(base));
+  if (porUn) return AREA_POR_UNIDADE[porUn][un] || null;
+  const k = Object.keys(AREA_GERENCIA).find(k => norm(k) === norm(base));
+  return k ? AREA_GERENCIA[k] : null;
+}
+// Gerência do cadastro do IP para (nome-alvo, unidade)
+function acharGerencia(alvo, un) {
+  const cands = gerencias.filter(g => chaveGer(g.nome) === chaveGer(alvo));
+  if (cands.length <= 1) return cands[0] || null;
+  const daUn = cands.filter(g => norm(g.unidades?.nome) === un || norm(g.nome).endsWith('- ' + un));
+  if (daUn.length === 1) return daUn[0];
+  const ambas = cands.filter(g => norm(g.unidades?.nome).includes('/'));
+  return ambas[0] || daUn[0] || null;
+}
+
+async function lerArquivo(arquivo) {
+  $('previa').innerHTML = '<div class="carregando">Lendo a planilha...</div>';
+  try {
+    const wb = XLSX.read(new Uint8Array(await arquivo.arrayBuffer()), { type: 'array' });
+    const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+    const col = (l, nomes) => { for (const n of nomes) { const k = Object.keys(l).find(x => norm(x) === norm(n)); if (k && l[k] != null && l[k] !== '') return l[k]; } return null; };
+    if (!linhas.length || col(linhas[0], ['Status consolidado do requisito']) === undefined) throw new Error('Planilha vazia.');
+
+    // Um requisito por "Código do Requisito de CAL" (a planilha repete o requisito para cada plano de ação)
+    const porCodigo = new Map();
+    let semCodigo = 0;
+    linhas.forEach(l => {
+      const cod = col(l, ['Código do Requisito de CAL']);
+      if (!cod) { semCodigo++; return; }
+      if (!porCodigo.has(cod)) porCodigo.set(cod, l);
+    });
+    if (!porCodigo.size) throw new Error('Não encontrei a coluna "Código do Requisito de CAL".');
+
+    const grupos = new Map(); // gerencia_id → contagens
+    const areasSemGerencia = new Map(), alvosSemCadastro = new Map();
+    let semArea = 0, semUnidade = 0;
+    const statusVistos = new Map();
+    porCodigo.forEach((l, cod) => {
+      const status = String(col(l, ['Status consolidado do requisito']) || '').trim();
+      statusVistos.set(status, (statusVistos.get(status) || 0) + 1);
+      const un = unidadeDoCAL(col(l, ['CAL']));
+      const area = col(l, ['Área responsável']);
+      if (!un) { semUnidade++; return; }
+      if (!area) { semArea++; return; }
+      const alvo = gerenciaAlvo(area, un);
+      if (!alvo) { const k = area + ''; areasSemGerencia.set(k, (areasSemGerencia.get(k) || 0) + 1); return; }
+      const ger = acharGerencia(alvo, un);
+      if (!ger) { const k = alvo + ' (' + un + ')'; alvosSemCadastro.set(k, (alvosSemCadastro.get(k) || 0) + 1); return; }
+      if (!grupos.has(ger.id)) grupos.set(ger.id, { ger, total: 0, at: 0, na: 0, nat: 0, ana: 0, nav: 0, outros: 0, areas: new Set(), pend: [] });
+      const g = grupos.get(ger.id);
+      g.total++; g.areas.add(String(area));
+      const s = norm(status);
+      if (s === 'ATENDIDO') g.at++;
+      else if (s === 'NAO APLICAVEL') g.na++;
+      else if (s === 'NAO ATENDIDO') g.nat++;
+      else if (s === 'EM ANALISE') g.ana++;
+      else if (s === 'NAO AVALIADO') g.nav++;
+      else g.outros++;
+      if (['NAO ATENDIDO', 'EM ANALISE', 'NAO AVALIADO'].includes(s) || !['ATENDIDO', 'NAO APLICAVEL'].includes(s)) {
+        g.pend.push({
+          codigo: String(cod), status, area: String(area), unidade: un,
+          requisito: String(col(l, ['Descrição do Requisito']) || '').slice(0, 2000),
+          normas: String(col(l, ['Normas Legais associadas']) || '').slice(0, 500),
+          critico: String(col(l, ['Requisito é crítico']) || '')
+        });
+      }
+    });
+    analise = { arquivo: arquivo.name, totalLinhas: linhas.length, requisitos: porCodigo.size, semCodigo, semArea, semUnidade,
+                grupos: [...grupos.values()].sort((a, b) => a.ger.nome.localeCompare(b.ger.nome)),
+                areasSemGerencia, alvosSemCadastro, statusVistos };
+    renderPrevia();
+  } catch (e) {
+    console.error(e);
+    analise = null;
+    $('previa').innerHTML = `<div class="aviso-box" style="margin-top:14px">Não consegui ler a planilha: ${esc(e.message)}</div>`;
+  }
+}
+
+// Números que vão para o IP
+function numeros(g) {
+  return {
+    at:  { prev: g.total - g.na, real: g.at },               // atendidos × aplicáveis
+    nav: { prev: g.total, real: g.total - g.nav }            // avaliados × total
+  };
+}
+
+function renderPrevia() {
+  const a = analise; if (!a) return;
+  const meses = mesesDaSafra(safraAtual()).filter(m => m.ym <= hojeMes());
+  const padrao = meses.some(m => m.ym === hojeMes()) ? hojeMes() : (meses[meses.length - 1] || {}).ym;
+  const tot = a.grupos.reduce((t, g) => { ['total', 'at', 'na', 'nat', 'ana', 'nav'].forEach(k => t[k] += g[k]); return t; }, { total: 0, at: 0, na: 0, nat: 0, ana: 0, nav: 0 });
+
+  const avisos = [];
+  if (!indAt || !indNav) avisos.push(`Não encontrei no cadastro do IP: ${[!indAt && IND_ATENDIDOS, !indNav && IND_NAO_AVALIADOS].filter(Boolean).map(esc).join(', ')}.`);
+  if (a.areasSemGerencia.size) avisos.push('Áreas sem gerência definida (ficam de fora): <ul>' + [...a.areasSemGerencia].map(([k, n]) => `<li>${esc(k)} — ${n} requisito(s)</li>`).join('') + '</ul>');
+  if (a.alvosSemCadastro.size) avisos.push('Gerências não encontradas no cadastro do IP (ficam de fora): <ul>' + [...a.alvosSemCadastro].map(([k, n]) => `<li>${esc(k)} — ${n} requisito(s)</li>`).join('') + '</ul>');
+  if (a.semArea) avisos.push(`${a.semArea} requisito(s) sem área responsável ficam de fora.`);
+  if (a.semUnidade) avisos.push(`${a.semUnidade} requisito(s) com CAL sem unidade reconhecida ficam de fora.`);
+  const statusDesconhecidos = [...a.statusVistos.keys()].filter(s => !['ATENDIDO', 'NAO APLICAVEL', 'NAO ATENDIDO', 'EM ANALISE', 'NAO AVALIADO'].includes(norm(s)));
+  if (statusDesconhecidos.length) avisos.push(`Status não previstos (contam como avaliados, não atendidos): ${statusDesconhecidos.map(esc).join(', ')}.`);
+
+  $('previa').innerHTML = `
+    <h2 style="margin-top:20px">2. Conferir e gravar</h2>
+    <p class="desc">${esc(a.arquivo)} — ${a.totalLinhas} linhas, ${a.requisitos} requisitos diferentes (cada requisito conta uma vez, mesmo com vários planos de ação).</p>
+    <div class="kpis">
+      <div class="kpi"><div class="n">${tot.total}</div><div class="t">requisitos nas gerências</div></div>
+      <div class="kpi ok"><div class="n">${tot.at}</div><div class="t">atendidos</div></div>
+      <div class="kpi"><div class="n">${tot.na}</div><div class="t">não aplicáveis</div></div>
+      <div class="kpi nok"><div class="n">${tot.nat}</div><div class="t">não atendidos</div></div>
+      <div class="kpi at"><div class="n">${tot.ana}</div><div class="t">em análise</div></div>
+      <div class="kpi at"><div class="n">${tot.nav}</div><div class="t">não avaliados</div></div>
+    </div>
+    ${avisos.length ? `<div class="aviso-box">${avisos.map(x => '<div>' + x + '</div>').join('')}</div>` : ''}
+    <div class="tabela">${tabelaGerencias(a.grupos)}</div>
+    <div class="linha-acoes">
+      <div><label for="mes-imp">Mês em que conta no IP</label>
+        <select id="mes-imp">${meses.map(m => `<option value="${m.ym}" ${m.ym === padrao ? 'selected' : ''}>${nomeMesLongo(m.ym)}</option>`).join('')}</select></div>
+      <button class="btn btn-primario" id="btn-gravar" ${(!indAt || !indNav || !a.grupos.length) ? 'disabled' : ''}>Gravar este mês</button>
+      <span style="font-size:13px;color:var(--muted)">Grava a foto para o mês escolhido. Depois, apure no Hub (Requisito Legal — Ius Natura) para levar ao IP.</span>
+    </div>`;
+  $('btn-gravar').onclick = gravar;
+  document.querySelectorAll('#previa tr.clicavel').forEach(tr => tr.onclick = () => {
+    const g = a.grupos.find(x => String(x.ger.id) === tr.dataset.ger); if (g) abrirPendencias(g.ger, g.pend);
+  });
+}
+
+function tabelaGerencias(grupos, salvos) {
+  const linhas = grupos.map(g => {
+    const n = salvos ? { at: salvos[g.ger.id]?.at || { prev: 0, real: 0 }, nav: salvos[g.ger.id]?.nav || { prev: 0, real: 0 } } : numeros(g);
+    const d = salvos ? (salvos[g.ger.id]?.detalhe || {}) : g;
+    const c = (x) => `<td class="${x.real >= x.prev ? 'ok' : 'nok'}">${x.real} de ${x.prev}<div class="sub">${pct(x.real, x.prev)}%</div></td>`;
+    const nPend = (d.nat || 0) + (d.ana || 0) + (d.nav || 0);
+    return `<tr class="clicavel" data-ger="${g.ger.id}" title="Ver pendências">
+      <td><b>${esc(g.ger.nome)}</b> <span class="sub">${esc(g.ger.unidades?.nome || '')}</span></td>
+      <td>${d.total ?? ''}</td><td>${d.at ?? ''}</td><td>${d.na ?? ''}</td><td>${d.nat ?? ''}</td><td>${d.ana ?? ''}</td><td>${d.nav ?? ''}</td>
+      ${c(n.at)}${c(n.nav)}
+      <td>${nPend ? `<span class="btn-link">${nPend} pendência(s)</span>` : '—'}</td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Gerência</th><th>Total</th><th>Atendido</th><th>Não aplic.</th><th>Não atendido</th><th>Em análise</th><th>Não avaliado</th>
+    <th>Ind. atendidos</th><th>Ind. não avaliados</th><th></th></tr></thead><tbody>${linhas || '<tr><td colspan="10">Nenhuma gerência.</td></tr>'}</tbody></table>`;
+}
+
+async function gravar() {
+  const a = analise, s = safraAtual(), mes = $('mes-imp').value;
+  if (!a || !s || !mes) return;
+  const { count } = await sb.from('requisitos_legais_mes').select('id', { count: 'exact', head: true }).eq('safra_id', s.id).eq('mes', mes);
+  if (count && !confirm(`${nomeMesLongo(mes)} já foi importado. Substituir pela planilha atual?`)) return;
+  if (!count && !confirm(`Gravar os números de ${a.grupos.length} gerência(s) em ${nomeMesLongo(mes)}?`)) return;
+  const btn = $('btn-gravar'); btn.disabled = true; btn.textContent = 'Gravando...';
+  try {
+    const quem = { importado_por: usuarioAtual.nome, importado_por_email: usuarioAtual.email, importado_em: new Date().toISOString(), arquivo: a.arquivo };
+    const linhas = [];
+    a.grupos.forEach(g => {
+      const n = numeros(g);
+      const detalhe = { total: g.total, at: g.at, na: g.na, nat: g.nat, ana: g.ana, nav: g.nav, outros: g.outros, areas: [...g.areas] };
+      linhas.push({ safra_id: s.id, mes, gerencia_id: g.ger.id, indicador_id: indAt.id, previsto: n.at.prev, realizado: n.at.real, detalhe, ...quem });
+      linhas.push({ safra_id: s.id, mes, gerencia_id: g.ger.id, indicador_id: indNav.id, previsto: n.nav.prev, realizado: n.nav.real, detalhe, ...quem });
+    });
+    let r = await sb.from('requisitos_legais_mes').delete().eq('safra_id', s.id).eq('mes', mes);
+    if (r.error) throw r.error;
+    r = await sb.from('requisitos_legais_mes').insert(linhas);
+    if (r.error) throw r.error;
+
+    r = await sb.from('requisitos_legais_pendentes').delete().eq('safra_id', s.id).eq('mes', mes);
+    if (r.error) throw r.error;
+    const pend = a.grupos.flatMap(g => g.pend.map(p => ({ safra_id: s.id, mes, gerencia_id: g.ger.id, ...p })));
+    for (let i = 0; i < pend.length; i += 500) {
+      r = await sb.from('requisitos_legais_pendentes').insert(pend.slice(i, i + 500));
+      if (r.error) throw r.error;
+    }
+    toast(`${nomeMesLongo(mes)} gravado. Agora apure no Hub para levar ao IP.`);
+    btn.textContent = 'Gravado ✓';
+  } catch (e) {
+    console.error(e);
+    toast('Não gravou: ' + e.message + (String(e.message).includes('requisitos_legais') ? ' (rode o SQL de criação das tabelas)' : ''), true);
+    btn.disabled = false; btn.textContent = 'Tentar de novo';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pendências por gerência (da planilha carregada ou de um mês salvo)
+// ─────────────────────────────────────────────────────────────
+function abrirPendencias(ger, pend, mes) {
+  const ordem = { 'NAO AVALIADO': 0, 'NAO ATENDIDO': 1, 'EM ANALISE': 2 };
+  const lista = [...pend].sort((a, b) => (ordem[norm(a.status)] ?? 9) - (ordem[norm(b.status)] ?? 9) || a.area.localeCompare(b.area));
+  const cls = s => ({ 'NAO ATENDIDO': 'st-nat', 'NAO AVALIADO': 'st-nav', 'EM ANALISE': 'st-ana' }[norm(s)] || 'st-ana');
+  $('modal-raiz').innerHTML = `<div class="fundo-modal" onclick="if(event.target===this)fecharModal()"><div class="modal" role="dialog" aria-modal="true">
+    <h3>${esc(ger.nome)} — pendências</h3>
+    <p class="desc">${lista.length} requisito(s) não atendido(s), em análise ou não avaliado(s)${mes ? ' em ' + nomeMesLongo(mes).toLowerCase() : ''}.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn btn-sec" id="btn-exp-pend">Exportar (Excel)</button><button class="btn btn-sec" onclick="fecharModal()">Fechar</button></div>
+    <div class="tabela"><table><thead><tr><th>Requisito</th><th>Status</th><th>Área</th><th>Normas</th><th>Crítico</th></tr></thead><tbody>
+      ${lista.map(p => `<tr><td style="white-space:normal;min-width:360px">${esc(p.requisito)}<div class="sub">${esc(p.codigo)}</div></td>
+        <td><span class="status ${cls(p.status)}">${esc(p.status)}</span></td><td>${esc(p.area)}</td>
+        <td style="white-space:normal">${esc(p.normas)}</td><td>${esc(p.critico)}</td></tr>`).join('') || '<tr><td colspan="5">Nenhuma pendência.</td></tr>'}
+    </tbody></table></div></div></div>`;
+  $('btn-exp-pend').onclick = () => {
+    const ws = XLSX.utils.aoa_to_sheet([['Código', 'Requisito', 'Status', 'Área responsável', 'Unidade', 'Normas', 'Crítico'],
+      ...lista.map(p => [p.codigo, p.requisito, p.status, p.area, p.unidade, p.normas, p.critico])]);
+    ws['!cols'] = [{ wch: 16 }, { wch: 80 }, { wch: 14 }, { wch: 28 }, { wch: 8 }, { wch: 40 }, { wch: 8 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Pendências');
+    XLSX.writeFile(wb, `Requisitos_pendentes_${ger.nome.replace(/\W+/g, '_')}${mes ? '_' + mes : ''}.xlsx`);
+  };
+}
+function fecharModal() { $('modal-raiz').innerHTML = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+
+// ─────────────────────────────────────────────────────────────
+// Meses já importados
+// ─────────────────────────────────────────────────────────────
+async function renderHist() {
+  const s = safraAtual(); if (!s) return;
+  $('hist').innerHTML = '<div class="carregando">Carregando...</div>';
+  const { data, error } = await sb.from('requisitos_legais_mes').select('*').eq('safra_id', s.id).order('mes', { ascending: false });
+  if (error) { $('hist').innerHTML = `<div class="aviso-box">Erro: ${esc(error.message)}. Se citar "requisitos_legais_mes", rode o SQL de criação das tabelas.</div>`; return; }
+  if (!data.length) { $('hist').innerHTML = '<div class="vazio">Nenhum mês importado nesta safra.</div>'; return; }
+  const porMes = {};
+  data.forEach(r => (porMes[r.mes] = porMes[r.mes] || []).push(r));
+  $('hist').innerHTML = Object.keys(porMes).sort().reverse().map(mes => {
+    const rs = porMes[mes], r0 = rs[0];
+    const salvos = {};
+    rs.forEach(r => {
+      const o = salvos[r.gerencia_id] = salvos[r.gerencia_id] || { detalhe: r.detalhe || {} };
+      o[r.indicador_id === indAt?.id ? 'at' : 'nav'] = { prev: r.previsto, real: r.realizado };
+    });
+    const grupos = Object.keys(salvos).map(Number).map(id => ({ ger: gerencias.find(g => g.id === id) || { id, nome: 'Gerência ' + id, unidades: {} } }))
+      .sort((a, b) => a.ger.nome.localeCompare(b.ger.nome));
+    return `<div class="cartao"><h2>${nomeMesLongo(mes)}</h2>
+      <p class="desc">Importado por ${esc(r0.importado_por || '-')} em ${fmtDataHora(r0.importado_em)} — ${esc(r0.arquivo || '')}</p>
+      <div class="tabela" data-mes="${mes}">${tabelaGerencias(grupos, salvos)}</div></div>`;
+  }).join('');
+  document.querySelectorAll('#hist .tabela').forEach(t => t.querySelectorAll('tr.clicavel').forEach(tr => tr.onclick = async () => {
+    const mes = t.dataset.mes, gid = Number(tr.dataset.ger);
+    const ger = gerencias.find(g => g.id === gid) || { nome: 'Gerência ' + gid };
+    const { data: pend, error: e2 } = await sb.from('requisitos_legais_pendentes').select('*').eq('safra_id', s.id).eq('mes', mes).eq('gerencia_id', gid);
+    if (e2) { toast('Erro: ' + e2.message, true); return; }
+    abrirPendencias(ger, pend || [], mes);
+  }));
+}
+
+init();
+</script>
+</body>
+</html>
